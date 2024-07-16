@@ -6,8 +6,8 @@ from video import threadVideo
 WINDOWWIDTH = 400
 WINDOWHEIGHT = 600
 
-BIRDWIDTH = 65
-BIRDHEIGHT = 55
+BIRDWIDTH = 60
+BIRDHEIGHT = 50
 G = 0.4
 SPEEDFLY = -3
 BIRDIMG = pygame.image.load('img/bird.png')
@@ -81,7 +81,7 @@ class Columns():
             
 def displayCongrats():
     font = pygame.font.SysFont('consolas', 40)
-    congratsSuface = font.render('Congratulations! You passed 10 columns!', True, (255, 0, 0))
+    congratsSuface = font.render('You win!', True, (255, 0, 0))
     congratsSize = congratsSuface.get_size()
 
     while True:
@@ -202,6 +202,10 @@ def gamePlay(bird, columns, score, xyz):
         score.update(bird, columns)
         
         drawHitboxes(bird, columns)  # Draw hitboxes
+
+        if score.score == 10:
+            displayCongrats()
+            return
 
         if isGameOver(bird, columns) == True:
             return
