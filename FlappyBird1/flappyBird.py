@@ -32,8 +32,8 @@ class Bird():
     def __init__(self):
         self.width = BIRDWIDTH
         self.height = BIRDHEIGHT
-        self.x = (WINDOWWIDTH - self.width)/2
-        self.y = (WINDOWHEIGHT- self.height)/2
+        self.x = (WINDOWWIDTH - self.width) / 2
+        self.y = (WINDOWHEIGHT - self.height) / 2
         self.speed = 0
         self.suface = BIRDIMG
 
@@ -41,9 +41,9 @@ class Bird():
         DISPLAYSURF.blit(self.suface, (int(self.x), int(self.y)))
     
     def update(self, mouseClick):
-        self.y += self.speed + 0.5*G
+        self.y += self.speed + 0.5 * G
         self.speed += G
-        if mouseClick == True:
+        if mouseClick:
             self.speed = SPEEDFLY
 
 class Columns():
@@ -56,7 +56,7 @@ class Columns():
         self.surface = COLUMNIMG
         self.ls = []
         for i in range(3):
-            x = WINDOWWIDTH + i*self.distance
+            x = WINDOWWIDTH + i * self.distance
             y = random.randrange(60, WINDOWHEIGHT - self.blank - 60, 20)
             self.ls.append([x, y])
         
@@ -78,7 +78,7 @@ class Columns():
             # Thay đổi tốc độ tăng và khoảng cách giữa hai cột
             self.speed += 0.2
             self.distance -= 10  # Giảm khoảng cách giữa hai cột
-            
+
 def displayCongrats():
     font = pygame.font.SysFont('consolas', 40)
     congratsSuface = font.render('You win!', True, (255, 0, 0))
@@ -89,6 +89,8 @@ def displayCongrats():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == KEYDOWN:
+                return
         
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
         DISPLAYSURF.blit(congratsSuface, (int((WINDOWWIDTH - congratsSize[0]) / 2), 300))
@@ -96,18 +98,16 @@ def displayCongrats():
         pygame.display.update()
         fpsClock.tick(FPS)
 
-
 def rectCollision(rect1, rect2):
-    if rect1[0] <= rect2[0]+rect2[2] and rect2[0] <= rect1[0]+rect1[2] and rect1[1] <= rect2[1]+rect2[3] and rect2[1] <= rect1[1]+rect1[3]:
-        return True
-    return False
+    return (rect1[0] <= rect2[0] + rect2[2] and rect2[0] <= rect1[0] + rect1[2] and
+            rect1[1] <= rect2[1] + rect2[3] and rect2[1] <= rect1[1] + rect1[3])
 
 def isGameOver(bird, columns):
     for i in range(3):
         rectBird = [bird.x, bird.y, bird.width, bird.height]
         rectColumn1 = [columns.ls[i][0], columns.ls[i][1] - columns.height, columns.width, columns.height]
         rectColumn2 = [columns.ls[i][0], columns.ls[i][1] + columns.blank, columns.width, columns.height]
-        if rectCollision(rectBird, rectColumn1) == True or rectCollision(rectBird, rectColumn2) == True:
+        if rectCollision(rectBird, rectColumn1) or rectCollision(rectBird, rectColumn2):
             return True
     if bird.y + bird.height < 0 or bird.y + bird.height > WINDOWHEIGHT:
         return True
@@ -122,18 +122,18 @@ class Score():
         font = pygame.font.SysFont('consolas', 40)
         scoreSuface = font.render(str(self.score), True, (0, 0, 0))
         textSize = scoreSuface.get_size()
-        DISPLAYSURF.blit(scoreSuface, (int((WINDOWWIDTH - textSize[0])/2), 100))
+        DISPLAYSURF.blit(scoreSuface, (int((WINDOWWIDTH - textSize[0]) / 2), 100))
     
     def update(self, bird, columns):
         collision = False
         for i in range(3):
             rectColumn = [columns.ls[i][0] + columns.width, columns.ls[i][1], 1, columns.blank]
             rectBird = [bird.x, bird.y, bird.width, bird.height]
-            if rectCollision(rectBird, rectColumn) == True:
+            if rectCollision(rectBird, rectColumn):
                 collision = True
                 break
-        if collision == True:
-            if self.addScore == True:
+        if collision:
+            if self.addScore:
                 self.score += 1
             self.addScore = False
         else:
@@ -149,7 +149,6 @@ def drawHitboxes(bird, columns):
         pygame.draw.rect(DISPLAYSURF, (0, 255, 0), columnRect1, 2)
         pygame.draw.rect(DISPLAYSURF, (0, 255, 0), columnRect2, 2)
 
-
 def gameStart(bird):
     bird.__init__()
 
@@ -158,7 +157,7 @@ def gameStart(bird):
     headingSize = headingSuface.get_size()
     
     font = pygame.font.SysFont('consolas', 20)
-    commentSuface = font.render('Please click to start', True, (0, 0, 0))
+    commentSuface = font.render('Please click to play', True, (0, 0, 0))
     commentSize = commentSuface.get_size()
     
     while True:
@@ -171,8 +170,8 @@ def gameStart(bird):
 
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
         bird.draw()
-        DISPLAYSURF.blit(headingSuface, (int((WINDOWWIDTH - headingSize[0])/2), 100))
-        DISPLAYSURF.blit(commentSuface, (int((WINDOWWIDTH - commentSize[0])/2), 500))
+        DISPLAYSURF.blit(headingSuface, (int((WINDOWWIDTH - headingSize[0]) / 2), 100))
+        DISPLAYSURF.blit(commentSuface, (int((WINDOWWIDTH - commentSize[0]) / 2), 500))
 
         pygame.display.update()
         fpsClock.tick(FPS)
@@ -182,6 +181,7 @@ def gamePlay(bird, columns, score, xyz):
     bird.speed = SPEEDFLY
     columns.__init__()
     score.__init__()
+    win = False  # Khai báo biến win để theo dõi trạng thái chiến thắng
     while True:
         mouseClick = False
         for event in pygame.event.get():
@@ -201,17 +201,19 @@ def gamePlay(bird, columns, score, xyz):
         score.draw()
         score.update(bird, columns)
         
-        drawHitboxes(bird, columns)  # Draw hitboxes
+        drawHitboxes(bird, columns)  # Vẽ hitboxes
 
         if score.score == 10:
             displayCongrats()
-            return
-
-        if isGameOver(bird, columns) == True:
-            return
+            win = True  # Cập nhật biến win khi người chơi thắng
+            break
+        if isGameOver(bird, columns):
+            break
 
         pygame.display.update()
         fpsClock.tick(FPS)
+    
+    return win  # Trả về giá trị win để biết trạng thái chiến thắng
 
 def gameOver(bird, columns, score):
     font = pygame.font.SysFont('consolas', 60)
@@ -237,9 +239,9 @@ def gameOver(bird, columns, score):
         DISPLAYSURF.blit(BACKGROUND, (0, 0))
         columns.draw()
         bird.draw()
-        DISPLAYSURF.blit(headingSuface, (int((WINDOWWIDTH - headingSize[0])/2), 100))
-        DISPLAYSURF.blit(commentSuface, (int((WINDOWWIDTH - commentSize[0])/2), 500))
-        DISPLAYSURF.blit(scoreSuface, (int((WINDOWWIDTH - scoreSize[0])/2), 160))
+        DISPLAYSURF.blit(headingSuface, (int((WINDOWWIDTH - headingSize[0]) / 2), 100))
+        DISPLAYSURF.blit(commentSuface, (int((WINDOWWIDTH - commentSize[0]) / 2), 500))
+        DISPLAYSURF.blit(scoreSuface, (int((WINDOWWIDTH - scoreSize[0]) / 2), 160))
 
         pygame.display.update()
         fpsClock.tick(FPS)
@@ -252,10 +254,10 @@ def main():
     xyz.start()
     
     while True:
-        
         gameStart(bird)
-        gamePlay(bird, columns, score, xyz)
-        gameOver(bird, columns, score)
+        win = gamePlay(bird, columns, score, xyz)
+        if not win:
+            gameOver(bird, columns, score)
 
 if __name__ == '__main__':
     main()
